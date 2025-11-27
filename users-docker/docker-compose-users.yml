@@ -1,0 +1,154 @@
+version: '3.8'
+services:
+  # -------------------------------------------
+  # 1. Config Server Replica Set (3 nodes for HA)
+  # -------------------------------------------
+  user-configsvr-1:
+    image: mongo:latest
+    container_name: user-mongo-configsvr-1
+    command: ["mongod", "--configsvr", "--replSet", "rs-user-config", "--port", "27017"]
+    volumes:
+      - user-config-data-1:/data/db
+    networks:
+      - user-shard-network
+  user-configsvr-2:
+    image: mongo:latest
+    container_name: user-mongo-configsvr-2
+    command: ["mongod", "--configsvr", "--replSet", "rs-user-config", "--port", "27017"]
+    volumes:
+      - user-config-data-2:/data/db
+    networks:
+      - user-shard-network
+  user-configsvr-3:
+    image: mongo:latest
+    container_name: user-mongo-configsvr-3
+    command: ["mongod", "--configsvr", "--replSet", "rs-user-config", "--port", "27017"]
+    volumes:
+      - user-config-data-3:/data/db
+    networks:
+      - user-shard-network
+  # -------------------------------------------
+  # 2. Shard 1 - ID Range 1 (3 Replicas)
+  # -------------------------------------------
+  user-shard-1-replica-1:
+    image: mongo:latest
+    container_name: user-mongo-shard-1-replica-1
+    command: ["mongod", "--shardsvr", "--replSet", "rs-user-shard-1", "--port", "27017"]
+    volumes:
+      - user-shard-1-data-1:/data/db
+    networks:
+      - user-shard-network
+  user-shard-1-replica-2:
+    image: mongo:latest
+    container_name: user-mongo-shard-1-replica-2
+    command: ["mongod", "--shardsvr", "--replSet", "rs-user-shard-1", "--port", "27017"]
+    volumes:
+      - user-shard-1-data-2:/data/db
+    networks:
+      - user-shard-network
+  user-shard-1-replica-3:
+    image: mongo:latest
+    container_name: user-mongo-shard-1-replica-3
+    command: ["mongod", "--shardsvr", "--replSet", "rs-user-shard-1", "--port", "27017"]
+    volumes:
+      - user-shard-1-data-3:/data/db
+    networks:
+      - user-shard-network
+  # -------------------------------------------
+  # 3. Shard 2 - ID Range 2 (3 Replicas)
+  # -------------------------------------------
+  user-shard-2-replica-1:
+    image: mongo:latest
+    container_name: user-mongo-shard-2-replica-1
+    command: ["mongod", "--shardsvr", "--replSet", "rs-user-shard-2", "--port", "27017"]
+    volumes:
+      - user-shard-2-data-1:/data/db
+    networks:
+      - user-shard-network
+  user-shard-2-replica-2:
+    image: mongo:latest
+    container_name: user-mongo-shard-2-replica-2
+    command: ["mongod", "--shardsvr", "--replSet", "rs-user-shard-2", "--port", "27017"]
+    volumes:
+      - user-shard-2-data-2:/data/db
+    networks:
+      - user-shard-network
+  user-shard-2-replica-3:
+    image: mongo:latest
+    container_name: user-mongo-shard-2-replica-3
+    command: ["mongod", "--shardsvr", "--replSet", "rs-user-shard-2", "--port", "27017"]
+    volumes:
+      - user-shard-2-data-3:/data/db
+    networks:
+      - user-shard-network
+  # -------------------------------------------
+  # 4. Shard 3 - ID Range 3 (3 Replicas)
+  # -------------------------------------------
+  user-shard-3-replica-1:
+    image: mongo:latest
+    container_name: user-mongo-shard-3-replica-1
+    command: ["mongod", "--shardsvr", "--replSet", "rs-user-shard-3", "--port", "27017"]
+    volumes:
+      - user-shard-3-data-1:/data/db
+    networks:
+      - user-shard-network
+  user-shard-3-replica-2:
+    image: mongo:latest
+    container_name: user-mongo-shard-3-replica-2
+    command: ["mongod", "--shardsvr", "--replSet", "rs-user-shard-3", "--port", "27017"]
+    volumes:
+      - user-shard-3-data-2:/data/db
+    networks:
+      - user-shard-network
+  user-shard-3-replica-3:
+    image: mongo:latest
+    container_name: user-mongo-shard-3-replica-3
+    command: ["mongod", "--shardsvr", "--replSet", "rs-user-shard-3", "--port", "27017"]
+    volumes:
+      - user-shard-3-data-3:/data/db
+    networks:
+      - user-shard-network
+  # -------------------------------------------
+  # 5. The `mongos` Router (Front Door for Users)
+  # -------------------------------------------
+  user-router:
+    image: mongo:latest
+    container_name: user-mongo-router
+    command: >
+      bash -c "
+        sleep 15;
+        mongos --configdb rs-user-config/user-mongo-configsvr-1:27017,user-mongo-configsvr-2:27017,user-mongo-configsvr-3:27017 --bind_ip_all
+      "
+    ports:
+      - "27018:27017"  # Different port to avoid conflict with business/reviews
+    depends_on:
+      - user-configsvr-1
+      - user-configsvr-2
+      - user-configsvr-3
+      - user-shard-1-replica-1
+      - user-shard-1-replica-2
+      - user-shard-1-replica-3
+      - user-shard-2-replica-1
+      - user-shard-2-replica-2
+      - user-shard-2-replica-3
+      - user-shard-3-replica-1
+      - user-shard-3-replica-2
+      - user-shard-3-replica-3
+    networks:
+      - user-shard-network
+networks:
+  user-shard-network:
+    driver: bridge
+volumes:
+  user-config-data-1:
+  user-config-data-2:
+  user-config-data-3:
+  user-shard-1-data-1:
+  user-shard-1-data-2:
+  user-shard-1-data-3:
+  user-shard-2-data-1:
+  user-shard-2-data-2:
+  user-shard-2-data-3:
+  user-shard-3-data-1:
+  user-shard-3-data-2:
+  user-shard-3-data-3:

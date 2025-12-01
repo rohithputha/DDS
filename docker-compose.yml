@@ -1,6 +1,23 @@
 version: '3.8'
 
 services:
+  weaviate:
+    image: semitechnologies/weaviate:1.27.0
+    ports:
+      - "8080:8080"
+      - "50051:50051"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      DEFAULT_VECTORIZER_MODULE: 'none'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+    volumes:
+      - weaviate-data:/var/lib/weaviate
+  
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
   # -------------------------------------------
   # 1. Config Server Replica Set (3 nodes for HA)
   # -------------------------------------------
@@ -189,3 +206,4 @@ volumes:
   shard-e-data-1:
   shard-e-data-2:
   shard-e-data-3:
+  weaviate-data:

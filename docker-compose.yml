@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
   weaviate:
     image: semitechnologies/weaviate:1.27.0
     ports:
-      - "8080:8080"
-      - "50051:50051"
+      - '8080:8080'
+      - '50051:50051'
     environment:
       QUERY_DEFAULTS_LIMIT: 25
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
@@ -13,30 +11,33 @@ services:
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
     volumes:
       - weaviate-data:/var/lib/weaviate
-  
+
   ollama:
     image: ollama/ollama
     ports:
-      - "11434:11434"
+      - '11434:11434'
   # -------------------------------------------
   # 1. Config Server Replica Set (3 nodes for HA)
   # -------------------------------------------
   configsvr-1:
     image: mongo:latest
     container_name: mongo-configsvr-1
-    command: ["mongod", "--configsvr", "--replSet", "rs-config", "--port", "27017"]
+    command:
+      ['mongod', '--configsvr', '--replSet', 'rs-config', '--port', '27017']
     volumes:
       - config-data-1:/data/db
   configsvr-2:
     image: mongo:latest
     container_name: mongo-configsvr-2
-    command: ["mongod", "--configsvr", "--replSet", "rs-config", "--port", "27017"]
+    command:
+      ['mongod', '--configsvr', '--replSet', 'rs-config', '--port', '27017']
     volumes:
       - config-data-2:/data/db
   configsvr-3:
     image: mongo:latest
     container_name: mongo-configsvr-3
-    command: ["mongod", "--configsvr", "--replSet", "rs-config", "--port", "27017"]
+    command:
+      ['mongod', '--configsvr', '--replSet', 'rs-config', '--port', '27017']
     volumes:
       - config-data-3:/data/db
 
@@ -46,19 +47,22 @@ services:
   shard-a-1:
     image: mongo:latest
     container_name: mongo-shard-a-1
-    command: ["mongod", "--shardsvr", "--replSet", "rs-shard-a", "--port", "27017"]
+    command:
+      ['mongod', '--shardsvr', '--replSet', 'rs-shard-a', '--port', '27017']
     volumes:
       - shard-a-data-1:/data/db
   shard-a-2:
     image: mongo:latest
     container_name: mongo-shard-a-2
-    command: ["mongod", "--shardsvr", "--replSet", "rs-shard-a", "--port", "27017"]
+    command:
+      ['mongod', '--shardsvr', '--replSet', 'rs-shard-a', '--port', '27017']
     volumes:
       - shard-a-data-2:/data/db
   shard-a-3:
     image: mongo:latest
     container_name: mongo-shard-a-3
-    command: ["mongod", "--shardsvr", "--replSet", "rs-shard-a", "--port", "27017"]
+    command:
+      ['mongod', '--shardsvr', '--replSet', 'rs-shard-a', '--port', '27017']
     volumes:
       - shard-a-data-3:/data/db
 
@@ -68,19 +72,22 @@ services:
   shard-b-1:
     image: mongo:latest
     container_name: mongo-shard-b-1
-    command: ["mongod", "--shardsvr", "--replSet", "rs-shard-b", "--port", "27017"]
+    command:
+      ['mongod', '--shardsvr', '--replSet', 'rs-shard-b', '--port', '27017']
     volumes:
       - shard-b-data-1:/data/db
   shard-b-2:
     image: mongo:latest
     container_name: mongo-shard-b-2
-    command: ["mongod", "--shardsvr", "--replSet", "rs-shard-b", "--port", "27017"]
+    command:
+      ['mongod', '--shardsvr', '--replSet', 'rs-shard-b', '--port', '27017']
     volumes:
       - shard-b-data-2:/data/db
   shard-b-3:
     image: mongo:latest
     container_name: mongo-shard-b-3
-    command: ["mongod", "--shardsvr", "--replSet", "rs-shard-b", "--port", "27017"]
+    command:
+      ['mongod', '--shardsvr', '--replSet', 'rs-shard-b', '--port', '27017']
     volumes:
       - shard-b-data-3:/data/db
 
@@ -90,19 +97,22 @@ services:
   shard-c-1:
     image: mongo:latest
     container_name: mongo-shard-c-1
-    command: ["mongod", "--shardsvr", "--replSet", "rs-shard-c", "--port", "27017"]
+    command:
+      ['mongod', '--shardsvr', '--replSet', 'rs-shard-c', '--port', '27017']
     volumes:
       - shard-c-data-1:/data/db
   shard-c-2:
     image: mongo:latest
     container_name: mongo-shard-c-2
-    command: ["mongod", "--shardsvr", "--replSet", "rs-shard-c", "--port", "27017"]
+    command:
+      ['mongod', '--shardsvr', '--replSet', 'rs-shard-c', '--port', '27017']
     volumes:
       - shard-c-data-2:/data/db
   shard-c-3:
     image: mongo:latest
     container_name: mongo-shard-c-3
-    command: ["mongod", "--shardsvr", "--replSet", "rs-shard-c", "--port", "27017"]
+    command:
+      ['mongod', '--shardsvr', '--replSet', 'rs-shard-c', '--port', '27017']
     volumes:
       - shard-c-data-3:/data/db
 
@@ -112,19 +122,22 @@ services:
   shard-d-1:
     image: mongo:latest
     container_name: mongo-shard-d-1
-    command: ["mongod", "--shardsvr", "--replSet", "rs-shard-d", "--port", "27017"]
+    command:
+      ['mongod', '--shardsvr', '--replSet', 'rs-shard-d', '--port', '27017']
     volumes:
       - shard-d-data-1:/data/db
   shard-d-2:
     image: mongo:latest
     container_name: mongo-shard-d-2
-    command: ["mongod", "--shardsvr", "--replSet", "rs-shard-d", "--port", "27017"]
+    command:
+      ['mongod', '--shardsvr', '--replSet', 'rs-shard-d', '--port', '27017']
     volumes:
       - shard-d-data-2:/data/db
   shard-d-3:
     image: mongo:latest
     container_name: mongo-shard-d-3
-    command: ["mongod", "--shardsvr", "--replSet", "rs-shard-d", "--port", "27017"]
+    command:
+      ['mongod', '--shardsvr', '--replSet', 'rs-shard-d', '--port', '27017']
     volumes:
       - shard-d-data-3:/data/db
 
@@ -134,19 +147,22 @@ services:
   shard-e-1:
     image: mongo:latest
     container_name: mongo-shard-e-1
-    command: ["mongod", "--shardsvr", "--replSet", "rs-shard-e", "--port", "27017"]
+    command:
+      ['mongod', '--shardsvr', '--replSet', 'rs-shard-e', '--port', '27017']
     volumes:
       - shard-e-data-1:/data/db
   shard-e-2:
     image: mongo:latest
     container_name: mongo-shard-e-2
-    command: ["mongod", "--shardsvr", "--replSet", "rs-shard-e", "--port", "27017"]
+    command:
+      ['mongod', '--shardsvr', '--replSet', 'rs-shard-e', '--port', '27017']
     volumes:
       - shard-e-data-2:/data/db
   shard-e-3:
     image: mongo:latest
     container_name: mongo-shard-e-3
-    command: ["mongod", "--shardsvr", "--replSet", "rs-shard-e", "--port", "27017"]
+    command:
+      ['mongod', '--shardsvr', '--replSet', 'rs-shard-e', '--port', '27017']
     volumes:
       - shard-e-data-3:/data/db
 
@@ -163,7 +179,9 @@ services:
         mongos --configdb rs-config/mongo-configsvr-1:27017,mongo-configsvr-2:27017,mongo-configsvr-3:27017 --bind_ip_all
       "
     ports:
-      - "27017:27017" # The ONLY port you connect to
+      - '27017:27017' # The ONLY port you connect to
+    volumes:
+      - ./data:/data
     depends_on:
       - configsvr-1
       - configsvr-2

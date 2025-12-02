@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-
+import { useAuth } from '../contexts/AuthContext';
 
 const ReviewList = ({ businessId, onBack }) => {
+    const { user, token } = useAuth();
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [newReview, setNewReview] = useState({ stars: 5, text: '', user_id: 'user123' });
+    const [submitting, setSubmitting] = useState(false);
+    const [newReview, setNewReview] = useState({ stars: 5, text: '' });
     const [business, setBusiness] = useState(null);
 
     React.useEffect(() => {
@@ -37,31 +39,62 @@ const ReviewList = ({ businessId, onBack }) => {
 
     const handleSubmitReview = async (e) => {
         e.preventDefault();
+        
+        if (!user || !user.user_id) {
+            alert('You must be logged in to write a review');
+            return;
+        }
+
+        setSubmitting(true);
         try {
-            const response = await fetch('http://localhost:8000/add_review', {
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            
+            // Add authorization header if token exists
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const response = await fetch('http://localhost:8000/reviews', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: headers,
                 body: JSON.stringify({
                     business_id: businessId,
-                    user_id: newReview.user_id,
+                    user_id: user.user_id,
                     stars: parseFloat(newReview.stars),
-                    text: newReview.text,
-                    date: new Date().toISOString()
+                    text: newReview.text.trim(),
                 }),
             });
 
-            if (!response.ok) throw new Error("Failed to add review");
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || "Failed to add review");
+            }
 
-            alert('Review added!');
-            // Refresh reviews
-            const reviewsRes = await fetch(`http://localhost:8000/business/${businessId}/reviews`);
-            const reviewsData = await reviewsRes.json();
-            setReviews(Array.isArray(reviewsData) ? reviewsData : []);
-            setNewReview({ ...newReview, text: '' });
+            // Refresh reviews and business data
+            const [reviewsRes, businessRes] = await Promise.all([
+                fetch(`http://localhost:8000/business/${businessId}/reviews`),
+                fetch(`http://localhost:8000/business/${businessId}`)
+            ]);
+
+            if (reviewsRes.ok) {
+                const reviewsData = await reviewsRes.json();
+                setReviews(Array.isArray(reviewsData) ? reviewsData : []);
+            }
+
+            if (businessRes.ok) {
+                const businessData = await businessRes.json();
+                setBusiness(businessData);
+            }
+
+            // Reset form
+            setNewReview({ stars: 5, text: '' });
+            alert('Review added successfully!');
         } catch (error) {
             alert('Error adding review: ' + error.message);
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -102,6 +135,9 @@ const ReviewList = ({ businessId, onBack }) => {
 
                 <div className="add-review-form">
                     <h3>Write a Review</h3>
+                    {user && (
+                        <p className="review-as-user">Writing as: {user.name || user.user_id}</p>
+                    )}
                     <form onSubmit={handleSubmitReview}>
                         <div className="form-group">
                             <label>Rating:</label>
@@ -111,6 +147,7 @@ const ReviewList = ({ businessId, onBack }) => {
                                 max="5"
                                 value={newReview.stars}
                                 onChange={(e) => setNewReview({ ...newReview, stars: e.target.value })}
+                                disabled={submitting}
                             />
                         </div>
                         <textarea
@@ -118,8 +155,11 @@ const ReviewList = ({ businessId, onBack }) => {
                             value={newReview.text}
                             onChange={(e) => setNewReview({ ...newReview, text: e.target.value })}
                             required
+                            disabled={submitting}
                         />
-                        <button type="submit">Submit Review</button>
+                        <button type="submit" disabled={submitting || !user}>
+                            {submitting ? 'Submitting...' : 'Submit Review'}
+                        </button>
                     </form>
                 </div>
             </div>

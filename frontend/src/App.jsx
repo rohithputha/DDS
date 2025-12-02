@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import SearchBar from './components/SearchBar';
 import BusinessList from './components/BusinessList';
 import ReviewList from './components/ReviewList';
 import SemanticResults from './components/SemanticResults';
+import Login from './components/Login';
 import './App.css';
 
-function App() {
+function AppContent() {
+    const { user, login, logout, isAuthenticated, loading: authLoading } = useAuth();
     const [businesses, setBusinesses] = useState([]);
     const [semanticResults, setSemanticResults] = useState([]);
     const [isSemanticMode, setIsSemanticMode] = useState(false);
@@ -51,9 +54,28 @@ function App() {
         }
     };
 
+    if (authLoading) {
+        return <div className="App"><p>Loading...</p></div>;
+    }
+
+    if (!isAuthenticated()) {
+        return <Login onLogin={login} />;
+    }
+
+    const handleLogout = () => {
+        logout();
+        window.location.reload();
+    };
+
     return (
         <div className="App">
-            <h1>Yelp Distributed Discovery</h1>
+            <div className="app-header">
+                <h1>Yelp Distributed Discovery</h1>
+                <div className="user-info">
+                    <span>Welcome, {user?.name || user?.user_id}</span>
+                    <button onClick={handleLogout} className="logout-button">Logout</button>
+                </div>
+            </div>
 
             {!selectedBusinessId ? (
                 <>
@@ -70,6 +92,14 @@ function App() {
                 <ReviewList businessId={selectedBusinessId} onBack={() => setSelectedBusinessId(null)} />
             )}
         </div>
+    );
+}
+
+function App() {
+    return (
+        <AuthProvider>
+            <AppContent />
+        </AuthProvider>
     );
 }
 

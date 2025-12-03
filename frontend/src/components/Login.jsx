@@ -12,7 +12,7 @@ const Login = ({ onLogin }) => {
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:8000/users/login', {
+            const response = await fetch('http://108.61.214.225:8000/users/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -29,12 +29,10 @@ const Login = ({ onLogin }) => {
             }
 
             const data = await response.json();
-            
-            // Store token and user info
+
             localStorage.setItem('authToken', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
-            
-            // Call parent callback
+
             onLogin(data.user, data.token);
         } catch (error) {
             setError(error.message || 'Login failed. Please check your credentials.');
@@ -56,7 +54,6 @@ const Login = ({ onLogin }) => {
                             type="text"
                             value={user_id}
                             onChange={(e) => setUser_id(e.target.value)}
-                            placeholder="Enter your user ID"
                             required
                             disabled={loading}
                         />
@@ -68,7 +65,6 @@ const Login = ({ onLogin }) => {
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter your password"
                             required
                             disabled={loading}
                         />

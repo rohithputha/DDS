@@ -1,6 +1,4 @@
-"""
-User endpoints for the FastAPI application.
-"""
+
 from fastapi import APIRouter, HTTPException, Query
 from typing import List
 from bson import ObjectId
@@ -16,9 +14,8 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(user_id: str):
-    """Get a single user by ID."""
     try:
-        collection = get_collection("users")
+        collection = get_users_collection("users")
         
         user = collection.find_one({"user_id": user_id})
         
@@ -48,9 +45,8 @@ async def search_users(
     name: str = Query(None, description="Name to search for (optional)"),
     limit: int = Query(default=20, ge=1, le=100, description="Maximum number of results")
 ):
-    """Search for users by name using case-insensitive regex."""
     try:
-        collection = get_collection("users")
+        collection = get_users_collection("users")
         
         query = {}
         if name:
@@ -77,7 +73,6 @@ async def search_users(
 
 @router.post("/login", response_model=LoginResponse)
 async def login_user(login_data: UserLogin):
-    """Login user with user_id and password. Returns authentication token."""
     try:
         # Connect to users cluster (port 27018)
         users_collection = get_users_collection("users")
@@ -127,9 +122,8 @@ async def login_user(login_data: UserLogin):
 
 @router.post("", response_model=UserResponse, status_code=201)
 async def create_user(user: UserCreate):
-    """Create a new user. Auto-generates user_id if not provided."""
     try:
-        collection = get_collection("users")
+        collection = get_users_collection("users")
         
         user_doc = user.model_dump(exclude_none=True)
         

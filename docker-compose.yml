@@ -16,9 +16,7 @@ services:
     image: ollama/ollama
     ports:
       - '11434:11434'
-  # -------------------------------------------
-  # 1. Config Server Replica Set (3 nodes for HA)
-  # -------------------------------------------
+  # 1. Config Server Replica Set
   configsvr-1:
     image: mongo:latest
     container_name: mongo-configsvr-1
@@ -41,9 +39,7 @@ services:
     volumes:
       - config-data-3:/data/db
 
-  # -------------------------------------------
   # 2. Shard A Replica Set (1 Primary, 2 Replicas)
-  # -------------------------------------------
   shard-a-1:
     image: mongo:latest
     container_name: mongo-shard-a-1
@@ -66,9 +62,7 @@ services:
     volumes:
       - shard-a-data-3:/data/db
 
-  # -------------------------------------------
   # 3. Shard B Replica Set (1 Primary, 2 Replicas)
-  # -------------------------------------------
   shard-b-1:
     image: mongo:latest
     container_name: mongo-shard-b-1
@@ -91,9 +85,7 @@ services:
     volumes:
       - shard-b-data-3:/data/db
 
-  # -------------------------------------------
   # 4. Shard C Replica Set (1 Primary, 2 Replicas)
-  # -------------------------------------------
   shard-c-1:
     image: mongo:latest
     container_name: mongo-shard-c-1
@@ -116,9 +108,7 @@ services:
     volumes:
       - shard-c-data-3:/data/db
 
-  # -------------------------------------------
   # 5. Shard D Replica Set (1 Primary, 2 Replicas)
-  # -------------------------------------------
   shard-d-1:
     image: mongo:latest
     container_name: mongo-shard-d-1
@@ -141,9 +131,7 @@ services:
     volumes:
       - shard-d-data-3:/data/db
 
-  # -------------------------------------------
   # 6. Shard E Replica Set (1 Primary, 2 Replicas)
-  # -------------------------------------------
   shard-e-1:
     image: mongo:latest
     container_name: mongo-shard-e-1
@@ -166,9 +154,7 @@ services:
     volumes:
       - shard-e-data-3:/data/db
 
-  # -------------------------------------------
-  # 7. The `mongos` Router (Front Door)
-  # -------------------------------------------
+  # 7. The `mongos` Router
   router:
     image: mongo:latest
     container_name: mongo-router
@@ -179,7 +165,7 @@ services:
         mongos --configdb rs-config/mongo-configsvr-1:27017,mongo-configsvr-2:27017,mongo-configsvr-3:27017 --bind_ip_all
       "
     ports:
-      - '27017:27017' # The ONLY port you connect to
+      - '27017:27017' 
     volumes:
       - ./data:/data
     depends_on:
@@ -202,9 +188,7 @@ services:
       - shard-e-2
       - shard-e-3
 
-# -------------------------------------------
 # Volumes for Data Persistence (18 total)
-# -------------------------------------------
 volumes:
   config-data-1:
   config-data-2:

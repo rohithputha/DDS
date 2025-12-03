@@ -1,16 +1,4 @@
-"""
-Semantic search endpoints integrated into the unified backend.
 
-Keeps the existing URL:
-- GET /search/semantic
-
-Pipeline:
-1. Geo-filter businesses within a radius using MongoDB.
-2. Generate an embedding for the query using Ollama.
-3. Query Weaviate's Review collection with a near-vector search filtered
-   by the business_ids from step 1.
-4. Return review text plus business metadata for the UI.
-"""
 from fastapi import APIRouter, HTTPException
 
 from ..database import get_collection
@@ -24,13 +12,7 @@ router = APIRouter()
 
 
 def get_weaviate_client():
-    """
-    Connect to the local Weaviate instance.
-
-    Configuration matches the docker-compose setup:
-    - REST on 8080
-    - gRPC on 50051
-    """
+    
     return weaviate.connect_to_local(
         port=8080,
         grpc_port=50051,
@@ -45,16 +27,8 @@ def search_semantic(
     long: float,
     radius_meters: int = 5000,
 ):
-    """
-    Semantic search for reviews within a specific location radius.
-
-    1. Find businesses in MongoDB within the given radius.
-    2. Vector search Weaviate for reviews matching `query`, filtered to those
-       businesses.
-    3. Return reviews with business metadata for the frontend.
-    """
+  
     try:
-        # 1. Geo-filter: find nearby businesses in Mongo
         businesses = get_collection("businesses", read_preference=READ_PREFERENCE)
 
         mongo_query = {
@@ -90,7 +64,6 @@ def search_semantic(
         business_ids = [b["business_id"] for b in nearby_businesses]
         business_map = {b["business_id"]: b for b in nearby_businesses}
 
-        # 2. Generate embedding via Ollama
         try:
             embedding_response = ollama.embed(model="all-minilm", input=query)
             vector = embedding_response["embeddings"][0]
@@ -100,7 +73,6 @@ def search_semantic(
                 detail=f"Ollama embedding failed: {str(e)}",
             )
 
-        # 3. Vector search in Weaviate
         client = get_weaviate_client()
         try:
             reviews_collection = client.collections.get("Review")

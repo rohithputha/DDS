@@ -1,7 +1,4 @@
-"""
-Insert business subset data into MongoDB sharded cluster.
-Reads from data/business.subset.json and inserts into businesses collection.
-"""
+
 from pymongo import MongoClient, WriteConcern
 import json
 import sys
@@ -11,11 +8,9 @@ MONGO_URI = "mongodb://localhost:27017"
 DATABASE_NAME = "yelp_data"
 COLLECTION_NAME = "businesses"
 
-# Write concern for durability
 write_concern = WriteConcern(w="majority")
 
 def insert_businesses():
-    """Insert businesses from JSON file into MongoDB."""
     client = MongoClient(MONGO_URI)
     db = client[DATABASE_NAME]
     collection = db[COLLECTION_NAME].with_options(write_concern=write_concern)
@@ -28,12 +23,10 @@ def insert_businesses():
     
     print(f"Reading businesses from {data_file}...")
     
-    # Clear existing businesses
     print("Clearing existing businesses collection...")
     deleted_count = collection.delete_many({}).deleted_count
     print(f"  Deleted {deleted_count} existing businesses")
     
-    # Read and insert businesses
     batch_size = 1000
     batch = []
     processed = 0
@@ -48,7 +41,6 @@ def insert_businesses():
                 try:
                     business = json.loads(line)
                     
-                    # Ensure location is GeoJSON format if lat/long exist
                     if 'latitude' in business and 'longitude' in business:
                         business['location'] = {
                             'type': 'Point',
@@ -72,7 +64,6 @@ def insert_businesses():
                     print(f"\nError parsing line {line_num}: {e}")
                     continue
             
-            # Insert remaining batch
             if batch:
                 try:
                     collection.insert_many(batch, ordered=False)
@@ -82,7 +73,6 @@ def insert_businesses():
         
         print(f"\nInsertion complete. Total businesses inserted: {processed}")
         
-        # Create geospatial index
         print("Creating geospatial index on location field...")
         try:
             collection.create_index([("location", "2dsphere")])
@@ -90,7 +80,6 @@ def insert_businesses():
         except Exception as e:
             print(f"Warning: Could not create geospatial index: {e}")
         
-        # Verify count
         count = collection.count_documents({})
         print(f"Final count in database: {count}")
         

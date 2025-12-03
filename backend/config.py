@@ -1,6 +1,4 @@
-"""
-Configuration settings for MongoDB connection and shard routing.
-"""
+
 from pymongo import ReadPreference, WriteConcern
 
 MONGODB_CONNECTION_STRING = "mongodb://localhost:27017/"

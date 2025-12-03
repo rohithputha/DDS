@@ -1,6 +1,4 @@
-"""
-Review endpoints for the FastAPI application.
-"""
+
 from fastapi import APIRouter, HTTPException, Query, Header
 from typing import List, Optional
 from datetime import datetime
@@ -21,66 +19,53 @@ async def get_reviews_by_business(
     limit: int = Query(default=50, ge=1, le=100, description="Maximum number of results"),
     offset: int = Query(default=0, ge=0, description="Number of results to skip")
 ):
-    """Get all reviews for a specific business with user information."""
     try:
         reviews_collection = get_collection("reviews")
+        users_collection = get_users_collection("users")
         
-        pipeline = [
-            {
-                "$match": {"business_id": business_id}
-            },
-            {
-                "$lookup": {
-                    "from": "users",
-                    "localField": "user_id",
-                    "foreignField": "user_id",
-                    "as": "user_info"
-                }
-            },
-            {
-                "$unwind": {
-                    "path": "$user_info",
-                    "preserveNullAndEmptyArrays": True
-                }
-            },
-            {
-                "$addFields": {
-                    "user": {
-                        "user_id": "$user_info.user_id",
-                        "name": "$user_info.name",
-                        "email": "$user_info.email"
-                    }
-                }
-            },
-            {
-                "$project": {
-                    "user_info": 0
-                }
-            },
-            {
-                "$sort": {"date": -1}
-            },
-            {
-                "$skip": offset
-            },
-            {
-                "$limit": limit
-            }
-        ]
+        cursor = reviews_collection.find({"business_id": business_id})
+        cursor = cursor.sort("date", -1).skip(offset).limit(limit)
+        reviews = list(cursor)
         
-        results = list(reviews_collection.aggregate(pipeline))
-        
-        if not results:
+        if not reviews:
             return []
+            
+        user_ids = list({r.get("user_id") for r in reviews if r.get("user_id")})
         
-        reviews = []
-        for doc in results:
-            if "_id" in doc:
-                doc["_id"] = str(doc["_id"])
-                doc["id"] = doc["_id"]
-            reviews.append(ReviewResponse(**doc))
+        users_map = {}
+        if user_ids:
+            try:
+                users = list(users_collection.find(
+                    {"user_id": {"$in": user_ids}},
+                    {"user_id": 1, "name": 1, "email": 1}
+                ))
+                users_map = {u["user_id"]: u for u in users}
+            except Exception as e:
+                print(f"Error fetching users: {e}")
         
-        return reviews
+        results = []
+        for r in reviews:
+            user = users_map.get(r.get("user_id"))
+            
+            user_data = {
+                "user_id": r.get("user_id"),
+                "name": "Unknown User",
+                "email": None
+            }
+            
+            if user:
+                user_data["name"] = user.get("name", "Unknown User")
+                user_data["email"] = user.get("email")
+            
+            r["user"] = user_data
+            
+            if "_id" in r:
+                r["_id"] = str(r["_id"])
+                r["id"] = r["_id"]
+                
+            results.append(ReviewResponse(**r))
+        
+        return results
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving reviews: {str(e)}")
@@ -91,19 +76,8 @@ async def create_review(
     review: ReviewCreate,
     authorization: Optional[str] = Header(None)
 ):
-    """
-    Create a new review and update business aggregates atomically.
-    Also updates user review_count in users cluster.
-    
-    Steps:
-    1. Insert review into reviews collection (main cluster)
-    2. Update business aggregates (main cluster, same transaction)
-    3. Update user review_count (users cluster)
-    
-    If step 3 fails, the review is still kept (eventual consistency).
-    """
+
     try:
-        # Optional: Verify user is authenticated (can be made required later)
         current_user = await get_current_user_optional(authorization)
         if current_user and current_user.user_id != review.user_id:
             raise HTTPException(
@@ -137,11 +111,10 @@ async def create_review(
         if not review_doc.get("date"):
             review_doc["date"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        # Step 1 & 2: Insert review and update business in transaction (main cluster)
         client = db.client
         result = None
         with client.start_session() as session:
-            with session.start_transaction():
+            with session.start_transaction(write_concern=WRITE_CONCERN):
                 try:
                     # Insert review
                     result = reviews_collection.insert_one(review_doc, session=session)
@@ -174,7 +147,6 @@ async def create_review(
                         detail=f"Transaction failed: {str(e)}"
                     )
         
-        # Step 3: Update user review_count in users cluster (eventual consistency)
         try:
             current_user_review_count = user.get("review_count", 0)
             users_collection.update_one(
@@ -186,10 +158,8 @@ async def create_review(
                 }
             )
         except Exception as e:
-            # Log error but don't fail the request (eventual consistency)
             print(f"Warning: Failed to update user review_count: {str(e)}")
         
-        # Retrieve and return inserted review
         if not result:
             raise HTTPException(status_code=500, detail="Failed to create review")
         

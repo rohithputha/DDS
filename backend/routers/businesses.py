@@ -1,6 +1,4 @@
-"""
-Business endpoints for the FastAPI application.
-"""
+
 from fastapi import APIRouter, HTTPException, Query
 from typing import List
 from bson import ObjectId
@@ -26,7 +24,6 @@ async def search_businesses_by_location(
     radius: float = Query(default=5.0, ge=0.1, le=100, description="Radius in kilometers"),
     limit: int = Query(default=20, ge=1, le=100, description="Maximum number of results")
 ):
-    """Search for businesses near a location using geospatial query."""
     try:
         collection = get_collection("businesses")
         
@@ -75,7 +72,6 @@ async def search_businesses_by_region(
     category: str = Query(None, description="Category filter (optional)"),
     limit: int = Query(default=20, ge=1, le=100, description="Maximum number of results")
 ):
-    """Search for businesses by state, optionally filtered by city and category."""
     try:
         if not validate_state(state):
             raise HTTPException(status_code=400, detail=f"Invalid state code: {state}")
@@ -112,7 +108,6 @@ async def search_businesses_by_region(
 
 @router.get("/{business_id}", response_model=BusinessResponse)
 async def get_business(business_id: str):
-    """Get a single business by ID."""
     try:
         collection = get_collection("businesses")
         
@@ -141,7 +136,6 @@ async def get_business(business_id: str):
 
 @router.post("", response_model=BusinessResponse, status_code=201)
 async def create_business(business: BusinessCreate):
-    """Create a new business."""
     try:
         if not validate_state(business.state):
             raise HTTPException(status_code=400, detail=f"Invalid state code: {business.state}")

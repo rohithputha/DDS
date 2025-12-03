@@ -1,9 +1,8 @@
-"""
-FastAPI application entry point.
-"""
+
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+import time
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import get_client, close_connection
@@ -12,10 +11,7 @@ from .routers import businesses, reviews, users, discovery, semantic
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Lifespan context manager for startup and shutdown events.
-    """
-    # Test MongoDB connection on startup
+
     try:
         client = get_client()
         client.admin.command('ping')
@@ -25,12 +21,10 @@ async def lifespan(app: FastAPI):
     
     yield
     
-    # Close connection on shutdown
     close_connection()
     print("MongoDB connection closed")
 
 
-# Create FastAPI app
 app = FastAPI(
     title="Yelp Dataset API",
     description="REST API for geo-distributed local discovery on Yelp dataset",
@@ -38,25 +32,29 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    print(f"Request: {request.url.path} | Start: {start_time} | End: {time.time()} | Duration: {process_time}s")
+    return response
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify actual origins
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers
-# Core resource-style APIs
+
 app.include_router(businesses.router)
 app.include_router(reviews.router)
 app.include_router(users.router)
 
-# Compatibility / extended APIs from earlier design
-# - /search/location
-# - /business/{business_id}
-# - /business/{business_id}/reviews
+
 app.include_router(discovery.router)
 
 # - /search/semantic
@@ -65,7 +63,6 @@ app.include_router(semantic.router)
 
 @app.get("/")
 async def root():
-    """Root endpoint with API information."""
     return {
         "message": "Yelp Dataset API",
         "version": "1.0.0",
@@ -95,7 +92,6 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
     try:
         client = get_client()
         client.admin.command('ping')

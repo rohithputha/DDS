@@ -1,9 +1,9 @@
 import json
 import orjson
-# Configuration
+# Configuation
 INPUT_FILE = 'data/user.subset.json'
 OUTPUT_FILE = 'data/user.subset.with_passwords.json'
-PASSWORD = 'yelp2024'  # Same password for all users for simplicity
+PASSWORD = 'yelp2024'  
 print("Starting password addition process...")
 print(f"Reading from: {INPUT_FILE}")
 print(f"Writing to: {OUTPUT_FILE}")

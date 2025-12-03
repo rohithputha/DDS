@@ -14,8 +14,8 @@ const ReviewList = ({ businessId, onBack }) => {
             if (!businessId) return;
             try {
                 const [reviewsRes, businessRes] = await Promise.all([
-                    fetch(`http://localhost:8000/business/${businessId}/reviews`),
-                    fetch(`http://localhost:8000/business/${businessId}`)
+                    fetch(`http://108.61.214.225:8000/business/${businessId}/reviews`),
+                    fetch(`http://108.61.214.225:8000/business/${businessId}`)
                 ]);
 
                 if (!reviewsRes.ok || !businessRes.ok) {
@@ -39,7 +39,7 @@ const ReviewList = ({ businessId, onBack }) => {
 
     const handleSubmitReview = async (e) => {
         e.preventDefault();
-        
+
         if (!user || !user.user_id) {
             alert('You must be logged in to write a review');
             return;
@@ -50,13 +50,12 @@ const ReviewList = ({ businessId, onBack }) => {
             const headers = {
                 'Content-Type': 'application/json',
             };
-            
-            // Add authorization header if token exists
+
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
-            const response = await fetch('http://localhost:8000/reviews', {
+            const response = await fetch('http://108.61.214.225:8000/reviews', {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify({
@@ -72,10 +71,9 @@ const ReviewList = ({ businessId, onBack }) => {
                 throw new Error(errorData.detail || "Failed to add review");
             }
 
-            // Refresh reviews and business data
             const [reviewsRes, businessRes] = await Promise.all([
-                fetch(`http://localhost:8000/business/${businessId}/reviews`),
-                fetch(`http://localhost:8000/business/${businessId}`)
+                fetch(`http://108.61.214.225:8000/business/${businessId}/reviews`),
+                fetch(`http://108.61.214.225:8000/business/${businessId}`)
             ]);
 
             if (reviewsRes.ok) {

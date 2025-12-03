@@ -5,7 +5,6 @@ function SemanticResults({ results, onSelect }) {
         return <div className="no-results">No relevant businesses found.</div>;
     }
 
-    // Group by business_id to show unique businesses
     const businessMap = new Map();
 
     results.forEach(result => {
@@ -15,7 +14,6 @@ function SemanticResults({ results, onSelect }) {
                 matching_reviews: []
             });
         }
-        // Collect top matching snippets
         if (businessMap.get(result.business_id).matching_reviews.length < 3) {
             businessMap.get(result.business_id).matching_reviews.push(result.review_text);
         }

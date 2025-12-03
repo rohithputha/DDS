@@ -8,10 +8,9 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check for stored authentication on mount
         const storedToken = localStorage.getItem('authToken');
         const storedUser = localStorage.getItem('user');
-        
+
         if (storedToken && storedUser) {
             try {
                 setToken(storedToken);

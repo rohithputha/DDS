@@ -23,9 +23,9 @@ function AppContent() {
         try {
             let url;
             if (isSemantic && semanticQuery) {
-                url = `http://localhost:8000/search/semantic?query=${encodeURIComponent(semanticQuery)}&lat=${lat}&long=${long}&radius_meters=${radius}`;
+                url = `http://108.61.214.225:8000/search/semantic?query=${encodeURIComponent(semanticQuery)}&lat=${lat}&long=${long}&radius_meters=${radius}`;
             } else {
-                url = `http://localhost:8000/search/location?lat=${lat}&long=${long}&radius_meters=${radius}`;
+                url = `http://108.61.214.225:8000/search/location?lat=${lat}&long=${long}&radius_meters=${radius}`;
             }
 
             const response = await fetch(url);
@@ -39,10 +39,10 @@ function AppContent() {
 
             if (isSemantic) {
                 setSemanticResults(Array.isArray(data) ? data : []);
-                setBusinesses([]); // Clear businesses
+                setBusinesses([]);
             } else {
                 setBusinesses(Array.isArray(data) ? data : []);
-                setSemanticResults([]); // Clear semantic results
+                setSemanticResults([]);
             }
         } catch (error) {
             console.error("Error searching:", error);

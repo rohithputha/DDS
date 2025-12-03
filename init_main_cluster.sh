@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Initialize main MongoDB cluster (businesses/reviews) with replica sets and sharding
 
 set -e
 
@@ -9,7 +8,6 @@ echo "Initializing Main MongoDB Cluster"
 echo "=========================================="
 echo ""
 
-# Step 1: Initiate Config Server Replica Set
 echo "[1/7] Initiating Config Server Replica Set..."
 docker exec mongo-configsvr-1 mongosh --eval "
 rs.initiate({
@@ -25,7 +23,6 @@ rs.initiate({
 echo "✓ Config server replica set initiated"
 echo ""
 
-# Step 2: Initiate Shard A (PACIFIC)
 echo "[2/7] Initiating Shard A (PACIFIC region)..."
 docker exec mongo-shard-a-1 mongosh --eval "
 rs.initiate({
@@ -40,7 +37,6 @@ rs.initiate({
 echo "✓ Shard A replica set initiated"
 echo ""
 
-# Step 3: Initiate Shard B (MOUNTAIN)
 echo "[3/7] Initiating Shard B (MOUNTAIN region)..."
 docker exec mongo-shard-b-1 mongosh --eval "
 rs.initiate({
@@ -55,7 +51,6 @@ rs.initiate({
 echo "✓ Shard B replica set initiated"
 echo ""
 
-# Step 4: Initiate Shard C (CENTRAL)
 echo "[4/7] Initiating Shard C (CENTRAL region)..."
 docker exec mongo-shard-c-1 mongosh --eval "
 rs.initiate({
@@ -70,7 +65,6 @@ rs.initiate({
 echo "✓ Shard C replica set initiated"
 echo ""
 
-# Step 5: Initiate Shard D (EASTERN)
 echo "[5/7] Initiating Shard D (EASTERN region)..."
 docker exec mongo-shard-d-1 mongosh --eval "
 rs.initiate({
@@ -85,7 +79,6 @@ rs.initiate({
 echo "✓ Shard D replica set initiated"
 echo ""
 
-# Step 6: Initiate Shard E (OTHER)
 echo "[6/7] Initiating Shard E (OTHER region)..."
 docker exec mongo-shard-e-1 mongosh --eval "
 rs.initiate({
@@ -100,11 +93,9 @@ rs.initiate({
 echo "✓ Shard E replica set initiated"
 echo ""
 
-# Wait for replica sets to stabilize
 echo "Waiting for replica sets to stabilize..."
 sleep 15
 
-# Step 7: Configure sharding via router
 echo "[7/7] Configuring sharding and zone-based routing..."
 docker exec mongo-router mongosh --eval "
 print('Starting cluster configuration...');
@@ -221,7 +212,5 @@ print('Cluster configuration complete!');
 echo "✓ Sharding configuration complete"
 echo ""
 
-echo "=========================================="
 echo "Main cluster initialization complete!"
-echo "=========================================="
 

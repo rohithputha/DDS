@@ -1,21 +1,16 @@
-"""
-Pydantic models for request/response schemas.
-"""
+
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 
-# Business Models
 
 class LocationPoint(BaseModel):
-    """GeoJSON Point for location."""
     type: str = Field(default="Point")
     coordinates: List[float] = Field(..., description="[longitude, latitude]")
 
 
 class BusinessCreate(BaseModel):
-    """Model for creating a new business."""
     name: str
     address: str
     city: str
@@ -29,7 +24,6 @@ class BusinessCreate(BaseModel):
 
 
 class BusinessResponse(BaseModel):
-    """Model for business response."""
     business_id: Optional[str] = None
     id: Optional[str] = Field(None, alias="_id", description="MongoDB document ID")
     name: str
@@ -57,7 +51,6 @@ class BusinessResponse(BaseModel):
 
 
 class BusinessSearchByLocation(BaseModel):
-    """Query parameters for location-based search."""
     latitude: float = Field(..., ge=-90, le=90)
     longitude: float = Field(..., ge=-180, le=180)
     radius: float = Field(default=5.0, ge=0.1, le=100, description="Radius in kilometers")
@@ -65,17 +58,14 @@ class BusinessSearchByLocation(BaseModel):
 
 
 class BusinessSearchByRegion(BaseModel):
-    """Query parameters for region-based search."""
     state: str = Field(..., min_length=2, max_length=2, description="Two-letter state code")
     city: Optional[str] = None
     category: Optional[str] = None
     limit: int = Field(default=20, ge=1, le=100)
 
 
-# Review Models==
 
 class ReviewCreate(BaseModel):
-    """Model for creating a new review."""
     business_id: str
     user_id: str
     stars: float = Field(..., ge=1, le=5)
@@ -87,14 +77,12 @@ class ReviewCreate(BaseModel):
 
 
 class UserInfo(BaseModel):
-    """User information embedded in review response."""
     user_id: Optional[str] = None
     name: Optional[str] = None
     email: Optional[str] = None
 
 
 class ReviewResponse(BaseModel):
-    """Model for review response."""
     review_id: Optional[str] = None
     id: Optional[str] = Field(None, alias="_id", description="MongoDB document ID")
     business_id: str
@@ -107,16 +95,13 @@ class ReviewResponse(BaseModel):
     date: Optional[str] = None
     state: Optional[str] = None
     location: Optional[LocationPoint] = None
-    user: Optional[UserInfo] = None  # Populated from $lookup
-
+    user: Optional[UserInfo] = None  
     model_config = {"populate_by_name": True}
 
 
-# User Models
 
 class UserCreate(BaseModel):
-    """Model for creating a new user."""
-    user_id: Optional[str] = None  # Auto-generate if not provided
+    user_id: Optional[str] = None  
     name: str
     email: str
     review_count: int = Field(default=0, ge=0)
@@ -129,7 +114,6 @@ class UserCreate(BaseModel):
 
 
 class UserResponse(BaseModel):
-    """Model for user response."""
     user_id: str
     id: Optional[str] = Field(None, alias="_id", description="MongoDB document ID")
     name: str
@@ -146,19 +130,16 @@ class UserResponse(BaseModel):
 
 
 class UserSearch(BaseModel):
-    """Query parameters for user search."""
     name: Optional[str] = None
     limit: int = Field(default=20, ge=1, le=100)
 
 
 class UserLogin(BaseModel):
-    """Model for user login request."""
     user_id: str
     password: str
 
 
 class LoginResponse(BaseModel):
-    """Model for login response."""
     token: str
     user: UserResponse
 

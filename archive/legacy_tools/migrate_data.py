@@ -1,7 +1,6 @@
 from pymongo import MongoClient
 import sys
 
-# Connect to MongoDB Router
 MONGO_URI = "mongodb://localhost:27017"
 client = MongoClient(MONGO_URI)
 
@@ -19,7 +18,6 @@ def migrate_collection(coll_name):
 
     print(f"Migrating {count} documents from test.{coll_name} to yelp_data.{coll_name}...")
     
-    # Batch insert
     batch_size = 1000
     batch = []
     processed = 0
@@ -49,5 +47,5 @@ if __name__ == "__main__":
     print("Starting migration...")
     migrate_collection('businesses')
     migrate_collection('reviews')
-    migrate_collection('users') # Just in case
+    migrate_collection('users') 
     print("Migration finished.")

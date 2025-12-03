@@ -3,7 +3,6 @@ import weaviate
 import ollama
 
 def debug_semantic():
-    # 1. Get Businesses
     mongo_client = MongoClient("mongodb://localhost:27017")
     db = mongo_client.yelp_data
     
@@ -30,7 +29,6 @@ def debug_semantic():
     business_ids = [b["business_id"] for b in businesses]
     print(f"Sample Business IDs: {business_ids}")
 
-    # 2. Check Weaviate
     w_client = weaviate.connect_to_local(port=8080, grpc_port=50051)
     reviews = w_client.collections.get("Review")
     
@@ -38,7 +36,6 @@ def debug_semantic():
     from weaviate.classes.query import Filter
     
     for bid in business_ids:
-        # Get one review to see text AND vector
         sample = reviews.query.fetch_objects(
             limit=1,
             filters=Filter.by_property("business_id").equal(bid),
@@ -62,13 +59,11 @@ def debug_semantic():
         ).total_count
         print(f"Business {bid}: {count} reviews")
 
-    # 3. Try Vector Search (Generic)
     print("\nTrying Vector Search for 'good'...")
     response = ollama.embed(model='all-minilm', input='good')
     vector = response['embeddings'][0]
     print(f"Query vector first 5: {vector[:5]}")
 
-    # Test WITHOUT filter first
     print("Searching Review collection WITHOUT filter...")
     result_no_filter = reviews.query.near_vector(
         near_vector=vector,
@@ -79,7 +74,6 @@ def debug_semantic():
     for obj in result_no_filter.objects:
         print(f"- {obj.properties['text'][:50]}... (Dist: {obj.metadata.distance})")
     
-    # Test WITH filter
     print("Searching Review collection WITH filter...")
     result = reviews.query.near_vector(
         near_vector=vector,

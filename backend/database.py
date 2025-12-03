@@ -1,6 +1,4 @@
-"""
-MongoDB database connection and collection utilities.
-"""
+
 from pymongo import MongoClient, ReadPreference, WriteConcern
 from pymongo.database import Database
 from pymongo.collection import Collection
@@ -17,7 +15,6 @@ _users_client: Optional[MongoClient] = None
 
 
 def get_client() -> MongoClient:
-    """Get or create MongoDB client with connection pooling."""
     global _client
     if _client is None:
         _client = MongoClient(
@@ -29,18 +26,13 @@ def get_client() -> MongoClient:
 
 
 def get_database() -> Database:
-    """Get the yelp_data database."""
     client = get_client()
     return client[DATABASE_NAME]
 
 
 def get_collection(collection_name: str, read_preference: ReadPreference = None, 
                    write_concern: WriteConcern = None) -> Collection:
-    """
-    Get a collection with read/write preferences applied.
-    
-    If preferences are not specified, uses defaults from config.
-    """
+
     db = get_database()
     collection = db[collection_name]
     
@@ -58,7 +50,6 @@ def get_collection(collection_name: str, read_preference: ReadPreference = None,
 
 
 def get_users_client() -> MongoClient:
-    """Get or create MongoDB client for users cluster (port 27018)."""
     global _users_client
     if _users_client is None:
         _users_client = MongoClient(
@@ -70,7 +61,6 @@ def get_users_client() -> MongoClient:
 
 
 def get_users_database() -> Database:
-    """Get the yelp_data database from users cluster."""
     client = get_users_client()
     return client[DATABASE_NAME]
 
@@ -78,11 +68,7 @@ def get_users_database() -> Database:
 def get_users_collection(collection_name: str = "users", 
                         read_preference: ReadPreference = None,
                         write_concern: WriteConcern = None) -> Collection:
-    """
-    Get a collection from users cluster with read/write preferences applied.
-    
-    If preferences are not specified, uses defaults from config.
-    """
+
     db = get_users_database()
     collection = db[collection_name]
     
@@ -100,7 +86,6 @@ def get_users_collection(collection_name: str = "users",
 
 
 def close_connection():
-    """Close the MongoDB connections."""
     global _client, _users_client
     if _client is not None:
         _client.close()

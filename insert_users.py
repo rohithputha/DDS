@@ -1,8 +1,4 @@
-"""
-Insert user subset data (with passwords) into MongoDB users cluster.
-Reads from data/user.subset.with_passwords.json and inserts into users collection.
-Connects to users cluster on port 27018.
-"""
+
 from pymongo import MongoClient, WriteConcern
 import json
 import sys
@@ -12,11 +8,9 @@ MONGO_URI = "mongodb://localhost:27018"
 DATABASE_NAME = "yelp_data"
 COLLECTION_NAME = "users"
 
-# Write concern for durability
 write_concern = WriteConcern(w="majority")
 
 def insert_users():
-    """Insert users from JSON file into MongoDB users cluster."""
     client = MongoClient(MONGO_URI)
     db = client[DATABASE_NAME]
     collection = db[COLLECTION_NAME].with_options(write_concern=write_concern)
@@ -29,12 +23,10 @@ def insert_users():
     
     print(f"Reading users from {data_file}...")
     
-    # Clear existing users
     print("Clearing existing users collection...")
     deleted_count = collection.delete_many({}).deleted_count
     print(f"  Deleted {deleted_count} existing users")
     
-    # Read and insert users
     batch_size = 1000
     batch = []
     processed = 0
@@ -65,7 +57,6 @@ def insert_users():
                     print(f"\nError parsing line {line_num}: {e}")
                     continue
             
-            # Insert remaining batch
             if batch:
                 try:
                     collection.insert_many(batch, ordered=False)
@@ -75,7 +66,6 @@ def insert_users():
         
         print(f"\nInsertion complete. Total users inserted: {processed}")
         
-        # Create indexes
         print("Creating indexes...")
         try:
             collection.create_index([("user_id", 1)], unique=True)
@@ -84,11 +74,9 @@ def insert_users():
         except Exception as e:
             print(f"Warning: Could not create indexes: {e}")
         
-        # Verify count
         count = collection.count_documents({})
         print(f"Final count in database: {count}")
         
-        # Verify password field exists
         sample = collection.find_one({"password": {"$exists": True}})
         if sample:
             print("Verified: Users have password field.")
